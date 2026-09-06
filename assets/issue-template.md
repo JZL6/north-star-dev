@@ -1,165 +1,73 @@
 # Issue — [Issue 名称]
 
-> 一个可聚焦、可交付、可验收的推进单元。Task 是执行动作，Issue 负责从必要调查到可复现证据的闭环。
+> 一个可在新上下文中独立理解、实现和验收的 tracer bullet。执行细节和证据放在同目录子文档，本文件保存边界、Context Pack 和状态索引。
 
 ## 0. 身份与状态
 
 - Issue ID：`ISSUE-[ID]`
-- Epic ID：[ID 或无]
-- 类型：`investigation | design | behavior | refactor | infrastructure | migration | integration | hardening`
-- 状态：`proposed | ready | in_progress | blocked | verifying | accepted | rejected | superseded | cancelled`
-- Baseline revision：[ID + source revision]
+- Epic ID：`EPIC-[ID]`
+- 类型：`behavior / bug / investigation / prefactor / refactor / migration / integration / hardening`
+- 状态：`proposed / ready / in_progress / blocked / verifying / reviewing / accepted / rejected / superseded / cancelled`
+- Baseline revision：[开始时的 Baseline ID + source revision]
+- Review fixed point：[commit 或内容快照]
 - 依赖 Issue：[ID 或无]
 - 执行者：[Agent/角色]
-- 创建时间：`YYYY-MM-DD`
-- 最后更新：`YYYY-MM-DD`
+- 创建/更新时间：`YYYY-MM-DD`
 
-## 1. 目标、非目标与退出条件
+## 1. 目标与非目标
 
-### 目标结果
+### 可观察结果
 
-[一句话描述完成后可观察到的结果]
+[完成后调用者、用户或系统能观察到什么]
 
 ### 非目标
 
-- [本 Issue 不处理什么]
+- [明确排除内容及原因]
 
 ### 退出条件
 
-- [ ] [可验证条件]
-- [ ] [所需文档、代码、测试或证据]
+- [ ] Delta-Spec 的 Acceptance 均满足或有批准的豁免。
+- [ ] Task 的必要 slice 完成，Verification Gate 通过。
+- [ ] 独立 review 通过，Closure 和回写完成。
+- [ ] [本 Issue 特有条件]
 
 ## 2. Context Pack
 
-### 2.1 相关约束与验收
-
-| ID | 内容 | 来源路径 |
+| 内容 | 路径/ID | 为什么相关 |
 |---|---|---|
-| [REQ/INV/QP ID] | [与本 Issue 相关的内容] | [路径] |
+| Project/Epic 约束 | [路径 + ID] | [关系] |
+| Baseline facts | [路径 + Fact ID] | [前提] |
+| 代码入口 | [路径/符号] | [入口] |
+| 测试与构建入口 | [路径/命令] | [用途] |
+| 公共 interface/契约 | [路径 + ID] | [关系] |
+| 前序 Issue Closure | [路径] | [继承事实] |
 
-### 2.2 相关工程入口
+- 允许修改：[路径、模块或 seam]
+- 禁止修改：[路径、公共契约或职责]
+- 与并行 Issue 共享的内容：[对象 + 协调方式]
 
-- 代码路径：[路径]
-- 测试路径：[路径]
-- 接口/契约：[路径]
-- 构建/运行入口：[路径或命令]
-- 前序交接：[路径或摘要]
+Context Pack 是起点。执行者可以读取完成目标所需的额外材料，并把新事实记录到适当文档。
 
-### 2.3 写入范围
+## 3. 需求与依赖
 
-- 允许修改：[路径或边界]
-- 禁止修改：[路径或边界]
-- 与其他 Issue 共享的接口：[接口 + 协调方式]
-
-Context Pack 不足时允许继续读取必要材料，但要记录新增事实及其回写位置。
-
-## 3. 已知事实与未知项
-
-| ID | 类型 | 内容 | 证据 | 对执行的影响 |
-|---|---|---|---|---|
-| F-001 | `verified` / `inferred` / `unknown` | [内容] | [路径/命令/测试] | [影响] |
-
-## 4. 调查与局部设计
-
-只写本 Issue 需要的设计。已在上层确定的内容通过 ID 和路径引用。
-
-### 调查问题
-
-- [问题 + 获取证据的方法]
-
-### 局部设计或备选方案
-
-[方案、取舍和决策条件；无需要时写“不需要 + 理由”]
-
-## 5. 验收与验证计划
-
-| Check ID | 验收行为/质量目标 | 验证方法 | 预期证据 |
-|---|---|---|---|
-| CHK-001 | [目标] | [测试、命令、基准、检查或人工步骤] | [证据] |
-
-行为变更优先使用 Given/When/Then 或同等清晰的行为描述。调查、重构、性能和安全 Issue 使用与类型匹配的证据，不伪造 TDD 过程。
-
-### 计划运行的门禁
-
-- TDD 内环：[命令/测试]
-- Issue Gate：[命令/检查]
-- Integration Gate：[需要时填写]
-- Epic Gate：[通常由主 Agent 执行或引用]
-
-## 6. 执行计划
-
-按依赖顺序列出可验证动作；计划可以随新证据更新。
-
-- [ ] [Task 1]
-- [ ] [Task 2]
-
-## 7. 执行证据
-
-### 7.1 变更
-
-| 文件/边界 | 变化摘要 | 对应 Check/Requirement |
+| Epic Requirement | 本 Issue 贡献 | 依赖/阻塞关系 |
 |---|---|---|
-| [路径] | [摘要] | [ID] |
+| REQ-001 | [贡献] | [Issue ID 或无] |
 
-### 7.2 验证结果
+## 4. 子文档索引
 
-| Check ID | 实际命令/方法 | 结果 | 证据/失败分类 |
+| 产物 | 路径 | 状态 | 完成条件 |
 |---|---|---|---|
-| CHK-001 | [命令] | `pass` / `fail` / `not_run` | [摘要或路径] |
+| Delta-Spec | [delta-spec.md] | [状态] | 行为、验收和非功能增量明确 |
+| Delta-Design | [delta-design.md] | [状态] | 复用、seam、方案、change budget 和测试策略明确 |
+| Task | [task.md] | [状态] | 当前可见 TDD slice 可执行 |
+| Verification | [verification.md] | [状态] | 需求、测试深度和工程门禁有证据 |
+| Closure | [closure.md] | [状态] | review、债务、偏差和回写完成 |
 
-失败分类：`change_regression | pre_existing | environment | flaky | unknown`。
+## 5. Blocker 与上浮
 
-### 7.3 TDD/实施摘要
-
-[记录关键行为如何被测试驱动或为什么采用其他验证方法；不要粘贴完整代码和长日志]
-
-## 8. 上浮项、阻塞与重构
-
-| ID | 类型 | 内容 | 级别 | 是否阻塞 | 下一步/去向 | 状态 |
-|---|---|---|---|---|---|---|
-| ESC-001 | `scope` / `design` / `project_constraint` / `dependency` / `refactor` | [内容] | `Issue` / `Epic` / `Project` | [是/否] | [路径/决策] | [状态] |
-
-关键冲突立即处理，不等待阶段结束。非阻塞重构只有在有明确收益和处理时机时才记录。
-
-## 9. Closure Record（交接、验收与回写）
-
-### 9.1 最终结果与验收
-
-- 达成的结果：[摘要]
-- 未达成项及原因：[内容或无]
-- 关键证据：[路径或 Check ID + 对应源码/报告修订]
-- Baseline drift：[无，或具体变化]
-- 后续可推进 Issue：[ID]
-- 主 Agent 验收结论：`pending | accepted | rejected`
-- 结论依据：[实际 diff、命令和证据]
-
-### 9.2 偏差与认识变化
-
-| ID | 原预期/假设 | 最终结果/新认识 | 判定 | 证据与决策来源 | 影响/遗留项 |
+| ID | 事实/问题 | 级别 | 是否阻塞 | 下一步与责任方 | 状态 |
 |---|---|---|---|---|---|
-| CHG-001 | [原内容] | [变化] | [符合规格/缺陷/已批准变更/待决策/证据冲突] | [路径 + 修订] | [影响] |
+| ESC-001 | [内容] | `Issue / Epic / Project / External` | [是/否] | [动作] | [状态] |
 
-无变化时写“无”。列出被推翻的假设和已解决问题的原 ID；新发现尚未确认时明确标记，不写成已确认事实。
-
-### 9.3 回写候选与处理结果
-
-- 对 Epic 的影响：[仅状态同步/涉及规格更新/无关联 Epic；说明理由]
-- 回写核查基于的 Epic 修订：[文档修订或内容摘要]
-- 对账状态：`pending | completed | blocked | not_applicable`
-
-| 候选 ID | 类别 | 目标文件与条目 ID | 建议变化及理由 | 来源证据/修订 | 处理状态 | 应用位置或未应用原因 |
-|---|---|---|---|---|---|---|
-| WB-001 | [状态同步/规格更新/上浮引用] | [路径 + ID] | [旧 → 新 + 理由] | [证据 + 修订] | `pending` / `applied` / `no_change` / `needs_decision` / `conflict` | [位置/原因] |
-
-没有需处理的变化时不填空行，说明无需更新的理由。候选 ID 与 Issue ID 合用并保持稳定。证据修订指实际核查的实现或文档版本，不直接沿用输入 Baseline。
-
-### 9.4 后续影响与交接
-
-- 已同步的 Issue/Requirement/Question：[ID + 证据]
-- 受影响的开放 Issue 与 Context Pack：[ID + 已刷新/待刷新/暂停 + 原因]
-- Project/ADR/Baseline 去向：[权威位置或无]
-- 未完成的回写、决策与责任归属：[内容或无]
-
-实现验收与回写对账分别记录。对账未完成不能报告整个回收流程完成；阻塞性规格冲突未解决不能验收受影响工作。重复回写应核对已应用条目，不追加同义结论。
-
-执行记录过长时拆到独立 evidence/handoff 文件，本文件只保留索引和当前结论。
+目标、验收、公共契约或 Project 不变量冲突时暂停受影响实现并上浮。局部非阻塞发现进入 Task、债务或后续 Issue。

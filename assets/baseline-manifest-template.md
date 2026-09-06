@@ -5,7 +5,7 @@
 ## 0. 基线身份
 
 - Baseline ID：`BASELINE-[ID]`
-- 状态：`collecting | verified | stale | superseded`
+- 状态：`collecting` / `verified` / `stale` / `superseded`
 - Source revision：[Git commit、版本或其他不可变标识]
 - 工作区状态：[clean，或列出与基线无关的既有改动]
 - 捕获时间：`YYYY-MM-DD HH:mm TZ`
@@ -16,7 +16,7 @@
 
 | 类型 | 命令/入口 | 结果 | 证据位置 | 适用范围 |
 |---|---|---|---|---|
-| Build | [命令] | `pass | fail | not_run` | [日志或摘要] | [范围] |
+| Build | [命令] | `pass` / `fail` / `not_run` | [日志或摘要] | [范围] |
 | Unit Test | [命令] | [结果] | [证据] | [范围] |
 | Integration Test | [命令] | [结果] | [证据] | [范围] |
 | Static Analysis | [命令] | [结果] | [证据] | [范围] |
@@ -25,7 +25,7 @@
 
 | 边界/模块 | 职责摘要 | 入口路径 | 依赖/调用证据 | 可信状态 |
 |---|---|---|---|---|
-| [名称] | [摘要] | [路径] | [路径、测试或命令] | `verified | inferred | unknown` |
+| [名称] | [摘要] | [路径] | [路径、测试或命令] | `verified` / `inferred` / `unknown` |
 
 ## 3. 接口与数据契约
 
@@ -46,7 +46,7 @@
 
 | Fact ID | 类型 | 结论 | 证据 | 置信度 | 影响 |
 |---|---|---|---|---|---|
-| FACT-001 | `verified | inferred | unknown` | [结论或问题] | [路径、测试、命令] | [高/中/低] | [影响] |
+| FACT-001 | `verified` / `inferred` / `unknown` | [结论或问题] | [路径、测试、命令] | [高/中/低] | [影响] |
 
 只有 `verified` 结论可以无条件作为 Epic 约束。`inferred` 和 `unknown` 必须在使用处显式标记。
 

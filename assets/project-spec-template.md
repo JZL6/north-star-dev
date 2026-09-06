@@ -5,7 +5,7 @@
 ## 0. 文档状态
 
 - Spec ID：`PROJECT-[ID]`
-- 状态：`draft | active | superseded`
+- 状态：`draft` / `active` / `superseded`
 - 版本：`[版本]`
 - 生效日期：`YYYY-MM-DD`
 - 当前 Baseline：[路径或 ID]
@@ -87,13 +87,13 @@
 
 | ID | 未知项/风险 | 影响 | 消除方式 | 状态 |
 |---|---|---|---|---|
-| PR-001 | [内容] | [影响] | [调查、实验或决策] | `open | resolved | accepted` |
+| PR-001 | [内容] | [影响] | [调查、实验或决策] | `open` / `resolved` / `accepted` |
 
 ## 9. 决策索引
 
 | ADR | 状态 | 决策摘要 | Supersedes | 路径 |
 |---|---|---|---|---|
-| ADR-001 | `proposed | accepted | deprecated | superseded` | [摘要] | [ADR 或无] | [路径] |
+| ADR-001 | `proposed` / `accepted` / `deprecated` / `superseded` | [摘要] | [ADR 或无] | [路径] |
 
 ADR 保留历史；通过状态和 `supersedes` 演进，不静默改写旧决策。
 

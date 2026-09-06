@@ -1,174 +1,184 @@
-# 自适应编排工作流
+# 一句话自动开发工作流
 
-仅在执行复杂 Epic、重建 Brownfield 基线、启动大型 Greenfield 项目或安排并行 Agent 时读取本文件。
+每次使用 North Star Dev 开发时读取。主 Agent 驱动状态迁移，用户只负责代码库无法回答的产品与工程决策。
 
-## 1. 模式判定
+## 1. 启动与目录选择
 
-按以下信号选择最轻的可行模式。边界不清时先做短调查，不要先建完整文档体系。
+收到一句需求后立即定位仓库根目录并读取适用的仓库规则。检查工作区状态，保留既有改动；记录 Issue 审查使用的初始源码修订或内容快照。
 
-| 信号 | 直接交付 | Issue | Epic | Project 启动/重建 |
-|---|---:|---:|---:|---:|
-| 单一模块且行为明确 | 是 | 可选 | 否 | 否 |
-| 存在关键未知项 | 否 | 是 | 可能 | 可能 |
-| 跨模块或需要多个独立验收点 | 否 | 可能 | 是 | 否 |
-| 会改变项目级约束或公共契约 | 否 | 否 | 是 | 可能 |
-| 没有可信的系统基线 | 否 | 否 | 可能 | 是 |
-| 单次上下文无法覆盖 | 否 | 可能 | 是 | 可能 |
-
-升级模式的理由必须来自风险或认知规模，而不是文档形式。推进中发现复杂度下降，可以合并后续阶段；发现影响扩大，应暂停受影响工作并升级模式。
-
-## 2. 工程状态
-
-### Project Spec
-
-- `draft`：目标或长期约束仍未确认。
-- `active`：当前项目级权威规格。
-- `superseded`：已由新版本取代，保留历史链接。
-
-### Baseline Manifest
-
-- `collecting`：仍在收集事实，不能作为变更安全边界。
-- `verified`：关键构建、测试和架构事实已在指定修订上验证。
-- `stale`：代码或依赖发生变化，需要刷新。
-- `superseded`：已由新基线取代。
-
-### Epic
+优先沿用项目已有的 spec/design/issue 目录。没有约定时使用：
 
 ```text
-proposed → discovering → ready → in_progress → verifying → accepted → closed
-                 ↘ blocked ↗                    ↘ abandoned
+docs/north-star/
+├── project-spec.md
+├── baseline.md
+├── epics/
+│   └── EPIC-<id>-<slug>/
+│       ├── epic-spec.md
+│       └── issues/
+│           └── ISSUE-<id>-<slug>/
+│               ├── issue.md
+│               ├── delta-spec.md
+│               ├── delta-design.md
+│               ├── task.md
+│               ├── verification.md
+│               └── closure.md
+└── changes/
+    └── CHANGE-<id>-<slug>.md
 ```
 
-- `ready`：结果、范围、验收、baseline revision 和首批 Issue 已明确。
-- `in_progress`：至少一个 Issue 正在推进。
-- `verifying`：功能完成，正在执行集成、迁移或发布门禁。
-- `accepted`：业务验收和工程门禁满足，但归档与 Baseline 对账可能未完成。
-- `closed`：权威规格、证据和 Baseline 已完成对账。
+轻量改动使用 `changes/` 下的一个文件容纳同名逻辑章节。标准/完整档位使用分离文件。路径变化不能改变这些对象的职责。
 
-### Issue
+## 2. 文档档位
+
+所有改动都经过 SDD+TDD 控制链，档位只决定持久化深度。
+
+| 判断 | 轻量 | 标准 | 完整 |
+|---|---|---|---|
+| 范围 | 单个局部行为或 Bug | 一个清晰能力，通常 1–3 个 Issue | 跨模块、多能力、架构迁移或长上下文 |
+| 公共接口/数据/兼容性 | 无变化 | 有限且可在 Epic 内控制 | 跨系统或影响多个开放 Epic |
+| 关键未知项 | 无或可快速消除 | 少量调查 | 多轮决策或当前路线不清晰 |
+| 文档 | 一个 change.md | Epic + Issue 产物 | Project + Baseline + Epic + Issue DAG 全套 |
+
+出现以下信号时升级档位：变更范围扩大、公共契约变化、新的跨模块职责、多个独立验收结果、当前上下文无法安全覆盖、实现前提与代码冲突。复杂度降低时可合并后续文档，但保留稳定 ID 和已有历史。
+
+## 3. 自动状态机
 
 ```text
-proposed → ready → in_progress → verifying → accepted
-              ↘ blocked          ↘ rejected
-              ↘ superseded / cancelled
+INTAKE
+  ↓
+EXPLORE ──事实不足──→ 继续调查/有界调查 subagent
+  ↓
+GRILL ──需要人的决策──→ 询问用户 → 记录决定 → 继续
+  ↓
+EPIC READY
+  ↓
+ISSUE FRONTIER
+  ↓
+ISSUE → DELTA SPEC → DELTA DESIGN → TASK
+  ↓
+TDD/CODE → VERIFICATION → INDEPENDENT REVIEW
+  ↑                         ↓ finding
+  └──── 修复（最多两轮） ──┘
+                            ↓ pass
+                     CLOSURE → WRITEBACK
+                            ↓
+                 NEXT ISSUE / EPIC VERIFY
 ```
 
-不要用主观百分比代替状态。状态迁移必须附已满足的退出条件和证据。
+阶段达到完成条件后自动进入下一阶段。只有以下情况暂停等待用户：
 
-## 3. 建立 Engineering Baseline
+- 目标、验收或范围存在多种合理解释，代码与文档无法决定。
+- 文档、代码或不同权威来源冲突，选择会改变业务行为。
+- 决策难以逆转、会改变 Project 不变量或显著扩大范围。
+- 需要用户提供凭据、权限、业务数据或外部团队决定。
+- 审查达到重试上限，仍存在 blocker/major finding。
 
-Baseline Manifest 记录“在某个修订上已验证什么”，不复制源码和长日志。
+事实调查、文件查找、测试命令、现有行为和可复用代码由 Agent 自行完成。询问时说明已确认事实、具体缺口、推荐选择及各选择的影响。
+
+## 4. Explore
 
 ### Brownfield
 
-1. 读取仓库指令、构建配置、测试入口、架构文档和近期相关变更。
-2. 记录当前源码修订及工作区状态；用户未授权时不要清理既有改动。
-3. 运行成本合理的构建、测试或只读诊断，记录实际可用命令和结果。
-4. 从代码、测试、运行行为和文档提取模块、接口、依赖与不变量。
-5. 将结论分类为：
-   - `verified`：有代码、测试、命令输出或权威文档支持。
-   - `inferred`：根据证据推断，尚未直接验证。
-   - `unknown`：当前证据不足。
-6. 对缺少安全网的遗留行为，优先创建 characterization tests 或调查 Issue。
-7. 文档与代码冲突时，不擅自选一方；记录冲突、影响和需要的决策。
+完成以下调查后才进入 Grill：
+
+1. 读取仓库指令、当前分支与工作区状态、相关历史和构建配置。
+2. 定位相关入口、调用链、数据流、公共 interface、测试 seam 和外部依赖。
+3. 搜索同类能力、名称、错误处理、配置和测试，识别可能复用或重复的实现。
+4. 读取存在的 Project、Epic、spec、design、ADR、issue 和 closure；这些文档是可选输入，不是启动前提。
+5. 运行成本合理的基线构建或测试，记录既有失败和环境限制。
+6. 将事实标记为 `verified`、`inferred` 或 `unknown`，附路径、命令或历史证据。
+7. 文档与代码冲突时保留双方陈述和影响，留给 Grill 决策。
+
+如果仓库没有 Project Spec 或 Baseline，按当前档位创建最小版本。没有既有记录格式时，可使用 [../assets/exploration-template.md](../assets/exploration-template.md)。不要为了补历史文档阻塞局部改动；只记录本次需求安全推进所需的事实。
 
 ### Greenfield
 
-1. 先写最小 Project Spec：业务目标、边界、核心领域语言、关键质量属性。
-2. 只决定会影响首条端到端路径的架构问题，其余保留为未知项。
-3. 建立可构建、可测试、可观测的最小工程骨架。
-4. 通过 walking skeleton 验证高风险假设；验证后才把结论写入 Baseline。
-5. 失败的假设保留证据并更新设计，不为维护最初文档而坚持错误方案。
+1. 探索运行环境、交付形态、技术约束、可复用资产和团队维护能力。
+2. 创建最小 Project Spec：目标、边界、领域语言、质量属性和不变量。
+3. 把未决架构问题列为假设，先决策会影响首条可运行路径的部分。
+4. 建立构建、测试和最小可观测入口，形成初始 Baseline。
+5. 以 walking skeleton 作为第一个 Issue，验证最高风险的端到端假设。
 
-使用 [../assets/baseline-manifest-template.md](../assets/baseline-manifest-template.md)。
+当目标过于庞大、连 Epic 的验收边界都不可见时，先创建决策 frontier：一次只解决当前可明确表述的决策，其余保留为未指定区域。路线足够清晰后再进入 Epic，不把决策调查和交付 Issue 混在一起。
 
-## 4. Epic 启动和影响分析
+## 5. Grill with docs
 
-每个 Epic 必须绑定 `baseline_revision`。至少回答：
+读取 [grilling.md](grilling.md)。基于 Explore 结果构建问题依赖树；事实问题继续调查，产品取舍和难以逆转的工程决定询问用户。
 
-- 目标业务结果如何观察和验收？
-- 哪些内容明确不属于本 Epic？
-- 哪些模块、接口、数据、部署和运维流程可能受影响？依据是什么？
-- 哪些 Project 约束或现有契约不能破坏？
-- 哪些仍是假设或未知项？哪个 Issue 负责消除？
-- 与其他开放 Epic 是否修改同一边界？
-- 失败时如何兼容、迁移、回滚和观测？
+完成条件：目标结果、范围/非目标、主要验收、关键业务分支、需要测试的 seam、项目约束冲突和首个 Issue 所需决策已经明确。非阻塞未知项进入 Epic Open Questions，并绑定调查 Issue 或触发条件。
 
-影响分析以表格记录目标、影响、证据、置信度和处理策略。不要只列文件名，也不要把猜测写成事实。
+决定形成时立即写入正确文档：领域词汇写 Project/项目术语表，难以逆转且令人意外的取舍写 ADR，当前需求决定写 Epic，局部决定写 Delta-Design。每项只保留一个权威位置。
 
-## 5. Issue 切片和 DAG
+## 6. Epic 与 Issue DAG
 
-优先按可验证的业务能力或风险切片，而不是按“先数据层、再服务层、最后 UI”拆成无法单独验收的水平任务。
+Epic 必须包含可观察的 Outcome、Requirement ID、业务流程、范围、影响分析、已确认设计、开放问题和关闭条件。Brownfield Epic 绑定开始时的 Baseline；Greenfield 初始 Epic 绑定首个可运行基线。
 
-一个合格 Issue：
+Issue 使用 tracer bullet：一条窄而完整、可演示或可验证的行为路径。优先让 slice 穿过所需层级并保持系统可运行。以下情况可以使用非纵向 Issue：
 
-- 有单一、可观察的结果和明确非目标。
-- 在一个执行上下文内可以调查、实现和验证。
-- 声明依赖、允许修改范围、共享接口和退出条件。
-- 失败不会迫使整个 Epic 回滚大量无关工作。
-- 完成后能减少业务风险、架构风险或未知量。
+- 调查或原型用于消除阻塞决策。
+- 宽范围机械迁移无法单独保持绿色时，使用 expand → 分批 migrate → contract，并设置依赖。
+- 为后续能力建立必要 seam 的 prefactor，且它自身有明确行为保护和退出条件。
 
-Issue 不需要在 Epic 开始时全部产生。调查、联调和失败验证产生的新工作应加入 DAG，并重新评估依赖和优先级。
+每个 Issue 适配一个新上下文，声明 blocking edges。主 Agent 每次从所有依赖已完成的 frontier 中选择业务风险最高或最能减少未知量的 Issue。
 
-## 6. Context Pack
+## 7. Issue 文档链
 
-派发 Issue 时提供：
+### Issue.md
 
-1. Epic、Issue 和 baseline revision 的稳定路径或 ID。
-2. 当前目标、非目标、验收条件和退出条件。
-3. 相关 Project/Epic 约束及来源位置。
-4. 相关接口、代码、测试、构建和运行入口。
-5. 已验证事实、未知项和前序交接。
-6. 允许修改、禁止修改和共享写入范围。
-7. 验证命令、期望证据和失败处理方式。
+定义目标、非目标、依赖、Context Pack、写入范围、退出条件和子文档索引。创建时记录审查 fixed point。
 
-Context Pack 是入口，不是信息围栏。执行者发现缺失信息时可以读取上层规格或相关代码，但必须说明为什么读取以及是否形成了需要回写的新事实。
+### Delta-Spec.md
 
-## 7. Agent 执行与集成
+描述相对 Epic 和当前系统改变的行为、业务规则、异常与非功能要求。每项链接 Epic Requirement，给出独立于实现的验收例子。规格不写文件列表和内部函数方案。
 
-### 单 Agent
+### Delta-Design.md
 
-- 一次只推进一个 Issue。
-- 每个 Issue 开始前读取 Context Pack，结束后更新 evidence 和 handoff。
-- 角色切换依赖权威文件，不依赖未落盘的对话记忆。
+记录当前实现事实、复用扫描、方案取舍、interface/seam、数据和状态变化、依赖、迁移/回滚、change budget、测试策略和重构处置。设计只覆盖当前 Issue，不复制 Epic。
 
-### 多 Agent
+### Task.md
 
-- 主 Agent 是 Project、Baseline 和 Epic 的唯一合并者。
-- 只并行 DAG 中无未满足依赖的 Issue。
-- 两个执行者不得同时拥有同一文件或同一不稳定接口的写权限。
-- 公共契约先由单独 Issue 定义并验收，再派发依赖它的实现 Issue。
-- 集成前核对 base revision；发生漂移时重新执行影响分析，不能盲目套用旧交接。
-- 主 Agent 必须查看实际 diff、运行适当验证，并区分执行报告与已确认事实。
+按照依赖和 TDD slice 排列动作。每个行为 slice 包含 Test ID、red 预期、最小 green 目标和验证命令。新证据可以调整后续任务；已完成证据不改写。
 
-## 8. 上浮规则
+### TDD、Code 与 Verification
 
-| 发现 | 动作 | 是否继续当前 Issue |
-|---|---|---|
-| 局部实现细节或非阻塞改进 | 记录在 Issue | 是 |
-| 改变 Epic 范围、验收或跨模块设计 | 更新 Epic 或创建新 Issue | 受影响部分暂停 |
-| 违反 Project 不变量、公共契约或质量政策 | 发起项目级决策或 ADR | 否 |
-| 依赖用户、外部团队、权限或环境 | 标记 blocker 和下一步 | 无安全替代时停止 |
+读取 [tdd-quality.md](tdd-quality.md) 和 [engineering-health.md](engineering-health.md)。逐 slice 执行测试先行和最小实现，更新 Task 实际状态。完成后生成 Verification，记录需求追踪、命令、结果、测试深度、项目适配和遗留风险。
 
-上浮后的结论必须落到对应权威文件，并记录它影响哪些开放 Issue。只在 Issue 交接中写一句“已上浮”不算处理完成。
+### Independent Review
 
-### Issue 回收与 Epic 回写
+读取 [review-loop.md](review-loop.md)，使用 [prompts](prompts/) 下的模板派发独立审查。审查通过后才能生成最终 Closure。
 
-读取 [epic-writeback.md](epic-writeback.md)，在验收时按 Closure → 相关规格/设计 → 实现证据核查输入；按内容角色查找，兼容单文件 Issue 和已拆分文档。
+### Closure 与 Writeback
 
-- 状态同步与规格更新分别判定。无新的设计认识也要同步实际变化的 Issue 状态；规格无变化时说明理由。
-- Closure 记录最终结果、预期偏差、回写候选、证据修订和处置结果。实现不符合要求时记录缺陷或待决策事项，不将偏差自动写成新规格。
-- 对每个候选核对目标 ID 和当前文档修订，更新相应条目及受影响的开放 Issue、Context Pack。
-- Issue 验收状态与回写对账状态分开维护；中断后先核对实际目标内容再恢复。所有必要同步完成后，才能宣告回收对账结束。
+Closure 汇总最终结果、规格/设计偏差、验证、review 迭代、债务处置、Baseline drift 和回写候选。读取 [epic-writeback.md](epic-writeback.md) 完成状态同步与规格更新。
 
-## 9. 验证与关闭
+## 8. Context 和 subagent
 
-按风险逐层扩大验证范围：TDD 内环、Issue Gate、Integration Gate、Epic Gate。昂贵的全量测试由项目政策、发布风险或变更影响决定，不作为每个 Issue 的无条件仪式。
+主 Agent 始终持有低分辨率全局图：Project 摘要、Baseline revision、Epic 当前状态和 Issue DAG。执行者只接收当前 Issue 的 Context Pack：
 
-关闭 Epic 前确认：
+- Issue/Delta/Task 路径和目标 ID。
+- 相关 Project/Epic 约束及来源。
+- 相关代码、测试、interface 和前序 Closure。
+- fixed point、允许写入范围、验证命令和停止条件。
 
-- 每个验收条件都有可追溯证据。
-- 相关测试、兼容、迁移、发布、回滚和观测要求已满足或明确豁免。
-- 新发现的长期事实已更新到 Project Spec、ADR 或 Baseline。
-- 未完成工作有明确状态、负责人或后续 Issue，不能藏在自由文本中。
-- Baseline 已刷新，其他开放 Epic 已完成 drift 检查。
+subagent 适合独立事实调查、一个 Issue 的实现、有固定输入的验证和独立审查。用户决策型 Grill 留在主 Agent 与用户之间。subagent 缺少信息时返回具体缺口，不自行扩大范围；主 Agent 补充后决定继续、拆 Issue 或询问用户。
+
+如果应用没有 subagent，主 Agent 串行完成各阶段，在实现结束后切换到全新审查上下文或重新读取 fixed-point diff，以维持作者/审查者视角分离。不能因没有 subagent 停在规划阶段。有 subagent 能力时，Issue 审查必须交给未参与实现的 subagent。
+
+## 9. 自动连续推进
+
+Issue 完成后：
+
+1. 更新 Epic 的 Issue 状态、Requirement 证据和必要规格。
+2. 更新 Baseline 中与当前源码修订相关的已验证事实。
+3. 检查其他开放 Issue 的依赖、假设和 Context Pack 是否漂移。
+4. 从 frontier 选择下一个未阻塞 Issue 并立即进入其 Issue 文档链。
+5. frontier 为空时执行 Epic 集成验证和关闭核查。
+
+发现新工作时按作用范围处理：当前 Issue 必需且未扩大目标的工作纳入 Task；独立可验收工作创建新 Issue；改变 Epic 目标或 Project 不变量的工作先完成相应决策。不要把所有偶然发现塞进当前 Issue。
+
+## 10. 整体完成条件
+
+Issue 完成：退出条件满足，Delta 与实际一致，Verification 通过，独立审查通过，Closure 和回写完成，债务已有明确处置。
+
+Epic 完成：所有 Requirement 满足或有明确豁免，Issue DAG 无隐藏遗留项，集成/发布门禁通过，跨 Issue 重复与架构漂移已检查，Project/Baseline 对账完成。

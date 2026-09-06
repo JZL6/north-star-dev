@@ -136,7 +136,7 @@
 5. 调查、纯重构、性能、安全等 Issue 使用与类型匹配的证据，不伪造红绿循环。
 6. 运行 Issue Gate，分类记录失败，不通过删测试或放宽断言制造绿灯。
 7. 将超出范围的问题按 Issue/Epic/Project 分级；阻塞性冲突立即停止受影响部分。
-8. 更新 Issue 的执行证据和交接区。
+8. 更新 Issue 的执行证据和 Closure Record：最终结果、原预期与实际偏差、新认识、回写候选及证据修订。无规格影响时说明理由。执行者提交候选，由主 Agent 核验合并。
 
 返回：
 - 完成状态及未满足的退出条件
@@ -149,22 +149,28 @@
 
 ## 7. Issue 回收与集成
 
+使用前读取 [epic-writeback.md](epic-writeback.md)。该模板也适用于基于已有 Issue 文档的独立 Epic 回写任务。
+
 ```text
 作为主 Agent 验收一个 Issue。执行报告是线索，不是已确认事实。
 
 输入：
 - Project、Baseline、Epic、Issue 路径
 - 实际工作区或提交
+- Closure 与证据修订；若已拆分，提供 Delta-Spec、Delta-Design、Task 等实际路径
 
 执行：
-1. 检查实际 diff 是否落在写入范围并对应 Requirement/Check ID。
-2. 运行成本与风险匹配的 Issue/Integration Gate。
-3. 判断失败属于当前回归、既有失败、环境、flaky 还是未知。
-4. 验证上浮项是否写入正确权威文件，阻塞问题是否已决策。
-5. 判断 accepted、rejected 或 blocked，并附证据。
-6. 更新 Epic 当前状态、Issue DAG 和必要的 Baseline drift 信息。
+1. 读取 Epic 相关条目与当前修订、Issue Closure；按需核查需求增量、最终设计、Task 总结及代码和测试。Closure 缺失时基于证据整理，保留未核实项。
+2. 检查实际 diff 是否落在写入范围并对应 Requirement/Check ID；运行成本与风险匹配的门禁。已有适用证据足够时无需重复运行测试。
+3. 分类失败与实施偏差，区分缺陷、已批准变更、待决策和证据冲突。不得通过扩大目标或放宽验收掩盖偏差。
+4. 分别形成状态同步和规格更新候选，标明目标 ID、原内容与新内容、理由、证据/修订和决策来源。无规格变化时说明理由。
+5. 核对当前目标仍适用后逐项合并；先核对已有应用结果，避免重复追加。保留 Epic 的完整需求和业务流程，分别维护设计采纳与验证状态。
+6. 同步 Issue 状态；Requirement 必须核对全部验收条件后才标为满足。解决问题时更新原 ID，项目级结论进入对应权威资料并引用。
+7. 刷新受影响开放 Issue、依赖和 Context Pack，更新必要的 Baseline drift 信息。
+8. 在 Closure 记录每项候选的 applied、no_change、needs_decision 或 conflict 结果，以及目标位置和遗留动作。无法完成的保持明确状态。
 
-输出：验收结论、依据、仍未满足的条件、下一可推进 Issue。
+输出：验收结论、状态同步与规格更新摘要（或无需更新的理由）、证据链接、对账状态、未决项和下一可推进 Issue。
+不要将 Issue 实现验收等同于回写完成。没有新证据或状态变化时，重复执行不得追加记录或仅刷新日期。
 ```
 
 ## 8. Epic 验收与 Baseline 对账
@@ -181,6 +187,7 @@
 4. 哪些结论只属于本 Epic，哪些是新的长期项目事实。
 5. 是否需要更新 Project Spec、ADR、契约或 Baseline Manifest。
 6. 新 Baseline 是否使其他开放 Epic 的假设失效。
+7. Issue Closure 的回写候选是否已处置，必要更新是否实际落入目标条目，是否仍有阻塞候选。
 
 产物：Epic 验收结论、更新后的权威文件、新 Baseline revision、其他开放 Epic 的 drift 清单。
 ```

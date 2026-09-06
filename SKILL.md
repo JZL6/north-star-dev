@@ -8,7 +8,7 @@ description: >-
 license: MIT
 metadata:
   short-description: 编排复杂软件变更的 SDD 与 TDD 闭环
-  version: 3.0.0
+  version: 3.1.0
 ---
 
 # North Star Dev
@@ -122,11 +122,22 @@ subagent 的输入使用 Context Pack，而不是任意字数摘要或整个仓�
 
 ## 文档更新原则
 
+- Epic 始终保存本次大需求当前完整的需求、业务流程、验收和设计。信息归属按作用范围判断；必要的协议参数、接口标识和证据路径可以保留，不能因其形式具体就排除。
 - 权威文件直接原位更新；交付时报告变更摘要、文件路径和验证证据，不在消息中重复输出完整代码或整个 Epic。
 - 事实、推断、决策和未知项必须明确区分，并尽量附来源路径、命令或测试证据。
 - ADR 保留历史，通过状态和 `supersedes` 关系演进；不要静默改写旧决策。
 - 长执行记录应拆到独立 evidence 或 handoff 文件，Epic Spec 只保留当前状态和索引。
 - Baseline 变化后，重新检查所有未关闭 Epic 的影响和假设。
+
+## Issue 回写 Epic
+
+执行 Issue 回收或独立回写任务前，读取 [references/epic-writeback.md](references/epic-writeback.md)。
+
+- **状态同步**：关联 Epic 的 Issue 状态、验收结果或依赖变化时，同步相关条目和证据；单个 Issue 通过不代表整个 Requirement 已满足。
+- **规格更新**：仅当新证据或已确认决策改变 Epic 的需求理解、业务流程、设计、约束、风险或开放问题时修改正文。无此变化时记录无需规格更新。
+- 以 Issue Closure 为入口，按需核查需求增量、设计增量、Task 总结及代码和测试证据。按内容角色读取，不强制新增 Delta-Spec、Delta-Design 或 Task 文件。
+- 实现偏差先区分缺陷、已批准变更与待决策事项；不能用回写为未批准的范围扩展或验收放宽补办授权。
+- 用稳定条目 ID、来源 Issue 和证据修订跟踪回写，支持重复执行和中断恢复；主 Agent 核验后合并，并刷新受影响的开放 Issue。
 
 ## 不适用范围
 

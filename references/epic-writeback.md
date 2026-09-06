@@ -32,6 +32,8 @@ Issue 没有关联 Epic 时不为回写创建 Epic；保留 Closure，按需要�
 | 需求与行为增量 | 目标、约束、验收计划 | Delta-Spec.md 或同等文档 | 能力、范围、业务流程、验收变化 |
 | 最终设计 | 局部设计、上浮项 | Delta-Design.md 或同等文档 | 最终决策、适用范围、被取代方案 |
 | 实现与验证 | 执行证据 | Task.md 总结、报告或 evidence | 实现偏差、实际修订、验证结果 |
+| 安全、隐私与风险接受 | Light Change 的 Gate/Closure | Security Review、Verification、Approval Matrix | 适用性、长期控制、残余风险、有效审批 |
+| 发布状态 | Light Change 的 Approval/Release | Approval Matrix、release evidence | 代码验收、发布准备、发布授权、实际发布分别核查 |
 
 读取顺序是查找策略，不是权威排序。只先读取相关章节；证据缺失、过期或冲突时再沿链接读取必要的设计、源码、diff 和测试。不得因为文件名或摘要限制禁止必要核查。
 
@@ -66,6 +68,8 @@ Closure 缺失时，从现有结果和证据整理最小 Closure，标记证据�
 3. 同步 Issue 状态与验收证据。判断 Requirement 是否满足时核查该条目的全部验收条件和相关依赖，不能从一个 Issue 的 accepted 状态直接推导。
 4. 规格变化影响后续工作时，重新检查开放 Issue 的目标、验收、依赖、契约和 Context Pack，并记录需刷新或暂停的对象。
 5. 在 Epic 保留精简的来源 Issue、候选 ID 和证据链接，在 Closure 记录已应用的位置及结果。长推理和过程日志留在 Issue/evidence。
+6. 安全/隐私长期事实按作用范围回写，保留数据分类、信任边界和控制的权威来源；不复制 secret、个人信息或敏感样本。
+7. 范围/验收豁免、残余风险和发布状态只在有效 Approval ID 覆盖当前范围与修订时更新。Review/Test PASS 不能替代审批，代码验收不能写成已发布。
 
 Issue 工作状态与回写状态分别维护：实现通过但回写未完成时，明确记录“已验收、对账待完成”。阻塞性的范围、验收或设计冲突未解决时，不能宣称对应工作已验收。该 Issue 的回收对账只有在应处理候选已有明确处置、受影响条目已同步后才算结束。
 

@@ -10,6 +10,8 @@
 - Baseline revision：[Baseline ID + source revision]
 - Project Spec version：[版本]
 - 负责人：[角色或团队]
+- Security/Privacy applicability：`not_applicable / applicable / unknown`
+- Approval/Release 状态：`not_required / pending / approved / approval_blocked / security_blocked / release_blocked`
 - 创建时间：`YYYY-MM-DD`
 - 最后更新：`YYYY-MM-DD`
 
@@ -150,6 +152,18 @@ Issue 优先按可验证的纵向能力或风险切片。若必须进行宽范�
 
 不适用的项目明确写“不适用 + 理由”，不要机械补全。
 
+### 11.1 安全、隐私与审批
+
+| 主题 | 适用性/决定 | 证据/Approval ID | 状态 |
+|---|---|---|---|
+| 数据分类与最小化 | [结论] | [路径/ID] | [状态] |
+| 信任边界、权限与外部 egress | [结论] | [路径/ID] | [状态] |
+| 独立 Security Review | [适用性] | [路径] | `pass / security_blocked / not_applicable` |
+| 范围/验收/风险豁免 | [内容或无] | [APR-ID] | [状态] |
+| Production Release Authorization | [环境、修订、动作] | [APR-ID] | `pending / approved / expired / not_required` |
+
+代码验收、发布准备、发布获批和实际已发布分别记录。Agent 不得把 review/test PASS 当作人类风险接受或生产授权。
+
 ## 12. 风险与阻塞
 
 | ID | 风险/阻塞 | 影响 | 缓解或下一步 | 负责人 | 状态 |
@@ -167,6 +181,8 @@ Issue 优先按可验证的纵向能力或风险切片。若必须进行宽范�
 - [ ] Issue Closure 的回写候选已有明确处置，必要状态及规格更新已核验，受影响开放 Issue 已同步；阻塞候选已解决。
 - [ ] 已完成跨 Issue 重复实现、平行抽象、废弃兼容层和技术债务检查。
 - [ ] 测试不仅达到项目覆盖率要求，还覆盖关键边界、失败、状态转换与适用的并发/生命周期风险。
+- [ ] Security/Privacy applicability 已明确；适用时独立 Security Review 通过，残余风险有有效 Approval ID。
+- [ ] 所有范围/验收豁免和不可逆决定有可追溯的人类审批；若要求生产发布，当前环境、修订和动作有临近执行时的明确授权。
 
 ## 14. 当前摘要与变更记录
 

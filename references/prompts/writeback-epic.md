@@ -4,9 +4,11 @@
 根据已通过独立审查的 Issue Closure，对 Epic、Project 和 Baseline 执行可重复的对账回写。
 
 输入：
+- 仓库根目录：[绝对路径]
 - Epic/Project/Baseline 当前路径与修订
 - Issue、Delta-Spec、Delta-Design、Task、Verification、Closure 路径
-- review 结果及当前源码修订
+- Spec/Quality/Security review、Approval 记录及当前源码修订
+- 执行预算：[超时、一次冲突重读、摘要上限；默认见 execution-budgets.md]
 
 读取 references/epic-writeback.md 后：
 1. 先核对 Closure、review 和实际证据，区分状态同步与规格更新。
@@ -15,6 +17,7 @@
 4. 跨 Epic 长期结论写 Project/ADR；当前修订事实写 Baseline；Epic 保留本次需求完整认识。
 5. 刷新受影响开放 Issue 的依赖、假设和 Context Pack。
 6. 在 Closure 记录候选的 applied/no_change/needs_decision/conflict 及目标位置。
+7. 回写安全/隐私长期事实和 Approval/Release 状态时保留适用性、权威来源、范围、修订与有效期；不得把 review PASS 写成风险接受或生产授权，也不得复制 secret/敏感数据。
 
 返回：变更文件、状态同步、规格更新或无需更新理由、未决候选、受影响 Issue 和下一 frontier Issue。
 ```

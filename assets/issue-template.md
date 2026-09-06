@@ -7,11 +7,14 @@
 - Issue ID：`ISSUE-[ID]`
 - Epic ID：`EPIC-[ID]`
 - 类型：`behavior / bug / investigation / prefactor / refactor / migration / integration / hardening`
-- 状态：`proposed / ready / in_progress / blocked / verifying / reviewing / accepted / rejected / superseded / cancelled`
+- 状态：`proposed / ready / in_progress / blocked / verifying / reviewing / review_blocked / security_blocked / approval_blocked / release_blocked / accepted_for_code / accepted / rejected / superseded / cancelled`
 - Baseline revision：[开始时的 Baseline ID + source revision]
 - Review fixed point：[commit 或内容快照]
+- Review Manifest：[使用 review-manifest-template.md 的路径；覆盖 staged/unstaged/untracked 与 before/after]
 - 依赖 Issue：[ID 或无]
 - 执行者：[Agent/角色]
+- Security/Privacy applicability：`not_applicable / applicable / unknown` + [理由/路径]
+- 所需 Approval ID：[ID、类型和状态或无]
 - 创建/更新时间：`YYYY-MM-DD`
 
 ## 1. 目标与非目标
@@ -29,6 +32,7 @@
 - [ ] Delta-Spec 的 Acceptance 均满足或有批准的豁免。
 - [ ] Task 的必要 slice 完成，Verification Gate 通过。
 - [ ] 独立 review 通过，Closure 和回写完成。
+- [ ] Security/Privacy Gate 和 Approval Gate 已按适用性通过；生产操作若属于退出条件，已有有效 Release Approval。
 - [ ] [本 Issue 特有条件]
 
 ## 2. Context Pack
@@ -62,6 +66,8 @@ Context Pack 是起点。执行者可以读取完成目标所需的额外材料�
 | Delta-Design | [delta-design.md] | [状态] | 复用、seam、方案、change budget 和测试策略明确 |
 | Task | [task.md] | [状态] | 当前可见 TDD slice 可执行 |
 | Verification | [verification.md] | [状态] | 需求、测试深度和工程门禁有证据 |
+| Security Review | [security-review.md 或不适用理由] | [状态] | 适用性明确，适用时独立审查和残余风险有处置 |
+| Approval Matrix | [路径或无] | [状态] | 触发的批准覆盖当前范围和修订 |
 | Closure | [closure.md] | [状态] | review、债务、偏差和回写完成 |
 
 ## 5. Blocker 与上浮

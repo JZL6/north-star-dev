@@ -8,7 +8,7 @@ description: >-
 license: MIT
 metadata:
   short-description: 一句话启动分层 SDD+TDD 项目开发
-  version: 4.0.0
+  version: 4.2.0
 ---
 
 # North Star Dev
@@ -22,7 +22,8 @@ metadata:
 ```text
 Explore → Grill with docs → Epic Spec → Issue.md → Delta-Spec.md
 → Delta-Design.md → Task.md → TDD → Code → Verification
-→ Independent Review → Issue Closure → Epic/Baseline Writeback
+→ Independent Review → Security/Approval Gates（按适用性）
+→ Issue Closure → Epic/Baseline Writeback
 → Next Issue or Epic Closure
 ```
 
@@ -37,6 +38,7 @@ Explore → Grill with docs → Epic Spec → Issue.md → Delta-Spec.md
 - 用普通语言说明当前决策、推荐答案和影响；用户不需要提供技术术语。
 - 让每个 Issue 成为可独立验收的 tracer bullet，并控制在一个新上下文可完成的范围内。
 - subagent 可以调查、实现、验证或审查一个有界任务；主 Agent 负责核对产物、集成、文档更新和最终判断。
+- 每个 Issue 明确安全/隐私适用性和人工审批触发器。Agent 只能准备证据，不能自批风险、范围豁免或生产发布。
 - 只有在用户目标、验收、范围冲突、难以逆转的设计选择或外部阻塞无法从仓库确定时暂停询问。问题解决后主动恢复流程。
 
 ## 工程对象
@@ -52,6 +54,8 @@ Issue.md           一个可独立验收的推进单元及 Context Pack
       ├─ Delta-Spec.md      相对 Epic/现状新增或改变的行为
       ├─ Delta-Design.md    本 Issue 的局部设计、复用与重构决策
       ├─ Task.md            可执行的 tracer-bullet/TDD 步骤
+      ├─ Review-Manifest.md 审查用 before/after 与完整文件清单
+      ├─ Security-Review.md 条件性安全/隐私审查与残余风险
       ├─ Verification.md    测试、审查与项目适配证据
       └─ Closure.md         最终结果、偏差、债务与回写候选
 ```
@@ -68,74 +72,31 @@ Issue.md           一个可独立验收的推进单元及 Context Pack
 | 标准 | 需要独立设计或多步实现，通常 1–3 个 Issue | 独立 Epic；每个 Issue 使用完整目录，简单 Delta 可在 Issue 内合并 |
 | 完整 | Greenfield、大型 Brownfield、跨模块、多 Issue、长上下文或架构迁移 | Project、Baseline、Epic、Issue DAG 及全部分离产物 |
 
-已有仓库规范优先；没有规范时使用 [assets](assets/) 中的模板和 `docs/north-star/` 默认目录。Explore 可使用 [assets/exploration-template.md](assets/exploration-template.md) 记录证据。文档档位可以随新证据升降，但已存在的稳定 ID 不重编号。
+已有仓库规范优先；没有规范时使用 [assets](assets/) 中的模板和 `docs/north-star/` 默认目录。Explore 使用 [exploration-template.md](assets/exploration-template.md)，独立审查边界使用 [review-manifest-template.md](assets/review-manifest-template.md)，条件性安全审查和审批分别使用 [security-review-template.md](assets/security-review-template.md) 与 [approval-matrix-template.md](assets/approval-matrix-template.md)。文档档位可以随新证据升降，但已存在的稳定 ID 不重编号。
 
-## Explore 与 Grill
+## 阶段路由
 
-- Brownfield：读取仓库指令、工作区状态、历史、代码结构、调用链、测试、构建入口、相关规格和 ADR。文档缺失时从代码与运行证据建立 Baseline；文档与代码冲突时显式记录。
-- Greenfield：探索用户目标、运行环境、约束和可复用资产，建立最小 Project Spec 与 Baseline，再用 walking skeleton 验证高风险假设。
-- Grill 遵守“事实由 Agent 查，决策由用户定”。按依赖顺序成组提出当前可回答的问题，每题给推荐答案和影响；小而明确的改动允许零问题直接继续。
-- 详细规则见 [references/grilling.md](references/grilling.md)。遇到需求含糊、冲突或阻塞时必须读取。
+只在相应阶段读取详细规则，避免把全部流程同时塞进上下文：
 
-## SDD 与 Issue 推进
+| 时机 | 必读文件 | 退出约束 |
+|---|---|---|
+| 启动、分档、自动推进 | [workflow.md](references/workflow.md) | 当前阶段完成后自动进入下一阶段 |
+| 需求含糊、冲突或需用户决定 | [grilling.md](references/grilling.md) | 事实由 Agent 查；只询问真实决策 |
+| 创建 Issue 或准备审查 | [fixed-point.md](references/fixed-point.md) | Review Manifest 覆盖既有脏改动和 untracked 文件 |
+| 编写 Delta-Design、实现和重构 | [engineering-health.md](references/engineering-health.md) | 通过 Project Fit，未超出 change budget |
+| 编写测试、TDD 和 Verification | [tdd-quality.md](references/tdd-quality.md) | 高风险维度有处置，覆盖率不替代测试深度 |
+| 涉及数据、权限、信任边界、外部输入/输出或安全控制 | [security-privacy.md](references/security-privacy.md) | 适用性明确；适用时独立 Security Review 通过 |
+| 派发或重试任何有界任务 | [execution-budgets.md](references/execution-budgets.md) | 有超时、尝试上限、输出边界和停止条件 |
+| Issue 独立审查 | [review-loop.md](references/review-loop.md) | 未参与实现的 reviewer 通过；自审仅作 advisory |
+| 范围豁免、高风险决定、不可逆动作或发布 | [approvals-release.md](references/approvals-release.md) | 有效 Approval ID；生产 mutation 有临近执行时的明确授权 |
+| Closure 与上层回写 | [epic-writeback.md](references/epic-writeback.md) | 状态、偏差、债务和回写候选均有处置 |
 
-1. Epic 定义业务结果、范围、需求 ID、验收、影响、设计决策和开放问题。
-2. Issue 按可验证行为或风险纵向切片，声明依赖、写入范围、退出条件和 Context Pack。
-3. Delta-Spec 只描述本 Issue 相对现状改变什么；每项行为连接 Epic Requirement 和可观察验收。
-4. Delta-Design 在编码前完成复用扫描、seam 选择、接口影响、方案取舍、技术债和验证策略。
-5. Task 将工作拆成一次一个行为的 TDD slice；任务随证据更新，不提前写出大批假想实现步骤。
-6. 实现完成后执行 Verification、独立审查、Closure 和 Epic/Baseline 回写，再选择 DAG 中下一个未阻塞 Issue。
+大型工作只规划当前可见 frontier。每个 Issue 必须完成完整逻辑链；Test Charter 不完整、Review Manifest 遗漏文件、适用的安全审查缺失或没有独立 reviewer 时不得关闭。独立审查为初审加最多两轮修复复审，达到上限后标记 blocked。缺少有权人工审批时使用 `approval_blocked`、`security_blocked` 或 `release_blocked`，不能由 Agent 自行解除。
 
-大型工作只规划当前可见 frontier。未知工作保留为开放问题；调查清晰后再创建 Issue，避免一次性冻结完整 WBS。
-
-## TDD 质量门
-
-写测试前读取 [references/tdd-quality.md](references/tdd-quality.md)。先从 Delta-Spec 建立 Test Charter，明确行为、风险、测试 seam、独立 oracle 和必须覆盖的测试维度。
-
-- 行为变更使用一条测试、一段最小实现的纵向 red→green slice。红灯必须因预期行为缺失而失败。
-- 测试从公共 interface 观察行为；mock 集中在真正的外部 seam。测试在内部重构后应继续成立。
-- 覆盖率只说明代码被执行。验收追踪、边界、状态变化、错误恢复、并发/时序、兼容性及断言敏感度决定覆盖深度。
-- 调查、纯重构、性能、安全和迁移 Issue 使用与类型匹配的证据；纯重构先建立行为保护，再保持绿灯推进。
-
-Test Charter 未覆盖高风险维度，或只以覆盖率数字证明质量时，Verification 不得通过。
-
-## 项目适配与持续重构
-
-编码前和 Issue 关闭前读取 [references/engineering-health.md](references/engineering-health.md)。
-
-- 新增能力前搜索现有实现、接口、概念和测试，记录复用、扩展或新建模块的理由。
-- 优先提高 locality 和 leverage：把一个变化收拢到负责该不变量的深模块，通过稳定 seam 验证。
-- 用 deletion test 检查新抽象：删除后若复杂度只消失而不会回流到调用者，该抽象可能是冗余转发层。
-- Delta-Design 声明 change budget；实现超出预计模块、公共接口或依赖范围时先重新评估，避免代码量失控。
-- 微重构跟随绿灯清理刚触碰的代码；Issue Gate 处理局部结构；Epic 检查跨 Issue 重复和架构漂移。超范围重构创建明确的前置或后续 Issue。
-- 技术债必须有证据、影响、处置方式和触发条件；“以后重构”不是有效记录。
-
-## 独立代码审查闭环
-
-Issue 实现和初步验证完成后读取 [references/review-loop.md](references/review-loop.md)。审查必须由未参与该 Issue 实现的 subagent 执行；记录 Issue 开始时的固定基线，对该基线到当前工作树或提交的 diff 审查。
-
-审查分别报告：
-
-- **Spec**：遗漏、错误实现、未授权行为和验收证据缺口。
-- **Project Fit**：与现有能力重复、职责错位、接口膨胀、架构/标准冲突和技术债。
-- **Test Quality**：测试 seam、oracle、风险维度、断言敏感度和实现耦合。
-
-初审后最多进行两轮“修复 → 相关验证 → 独立复审”。通过条件是没有未解决的 blocker/major finding，所需 Gate 通过，minor finding 已修复或有明确债务处置。达到上限仍未通过、同一重大问题重复出现或修复要求超出 Issue 边界时，将 Issue 标记 blocked，保存证据并向用户说明需要的决策。审查者只报告问题，不直接修改代码。
-
-可直接派发的提示词见 [references/prompts.md](references/prompts.md)。
-
-## Closure 与回写
-
-完成审查后生成 Closure，并读取 [references/epic-writeback.md](references/epic-writeback.md)：
-
-- 同步 Issue 状态、验证与依赖。
-- 只将改变 Epic 完整认识的已确认事实或决策更新到 Epic 正文。
-- 实现偏差先区分缺陷、已批准变更与待决策事项；测试通过不能替代范围授权。
-- 把跨 Epic 的长期结论上浮到 Project/ADR，把指定修订的工程事实更新到 Baseline。
-- 回写后刷新受影响 Issue 的 Context Pack，再自动推进下一个未阻塞 Issue。
+可直接派发的有界提示词见 [references/prompts.md](references/prompts.md)。
 
 ## 完成条件
 
-一个 Issue 只有在以下条件全部成立时才完成：规格与设计可追踪、所需 TDD slice 完成、Verification 通过、独立审查通过、Closure 完整、回写候选已处置。一个 Epic 只有在业务验收、Issue DAG、集成验证、债务处置及 Baseline 对账完成后才关闭。
+一个 Issue 只有在以下条件全部成立时才完成：规格与设计可追踪、所需 TDD slice 完成、Verification 通过、独立审查通过、安全/隐私适用性与所需审批已有处置、Closure 完整、回写候选已处置。一个 Epic 只有在业务验收、Issue DAG、集成验证、安全/隐私与审批门禁、债务处置及 Baseline 对账完成后才关闭。代码完成、Review PASS 和生产发布是三个独立状态；未经临近执行时的明确人类授权，不执行生产发布、迁移、配置写入或开关切换。
 
 检查产物时读取 [references/review-checklist.md](references/review-checklist.md)。不要因为文档已生成、测试为绿或代码很多就提前宣布完成。

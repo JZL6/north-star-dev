@@ -29,6 +29,8 @@
 |---|---|---|---|
 | TASK-V01 | 更新 Verification | 所有 Check 有当前修订证据 | [状态] |
 | TASK-R01 | 独立 review | 无 blocker/major | [状态] |
+| TASK-S01 | Security/Privacy Gate | 适用性明确；适用时独立审查通过且残余风险获有权处置 | [状态/不适用理由] |
+| TASK-A01 | Approval/Release Gate | 触发的 Approval 有效；生产 mutation 另有明确授权 | [状态/不适用理由] |
 | TASK-C01 | Closure 与回写 | 候选处置且下一 frontier 已确定 | [状态] |
 
 ## 4. 计划变化

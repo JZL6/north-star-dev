@@ -4,7 +4,7 @@
 
 ## 1. 启动与目录选择
 
-收到一句需求后立即定位仓库根目录并读取适用的仓库规则。检查工作区状态，保留既有改动；记录 Issue 审查使用的初始源码修订或内容快照。
+收到一句需求后立即定位仓库根目录并读取适用的仓库规则。检查工作区状态，保留既有改动；创建 Issue 时按 [fixed-point.md](fixed-point.md) 捕获 Review Manifest，不能遗漏 staged、unstaged 或 untracked 内容。
 
 优先沿用项目已有的 spec/design/issue 目录。没有约定时使用：
 
@@ -12,6 +12,7 @@
 docs/north-star/
 ├── project-spec.md
 ├── baseline.md
+├── approvals.md
 ├── epics/
 │   └── EPIC-<id>-<slug>/
 │       ├── epic-spec.md
@@ -21,6 +22,8 @@ docs/north-star/
 │               ├── delta-spec.md
 │               ├── delta-design.md
 │               ├── task.md
+│               ├── review-manifest.md
+│               ├── security-review.md
 │               ├── verification.md
 │               └── closure.md
 └── changes/
@@ -61,6 +64,10 @@ TDD/CODE → VERIFICATION → INDEPENDENT REVIEW
   ↑                         ↓ finding
   └──── 修复（最多两轮） ──┘
                             ↓ pass
+               SECURITY GATE（按适用性）
+                            ↓
+                 APPROVAL GATE（按触发器）
+                            ↓
                      CLOSURE → WRITEBACK
                             ↓
                  NEXT ISSUE / EPIC VERIFY
@@ -73,6 +80,10 @@ TDD/CODE → VERIFICATION → INDEPENDENT REVIEW
 - 决策难以逆转、会改变 Project 不变量或显著扩大范围。
 - 需要用户提供凭据、权限、业务数据或外部团队决定。
 - 审查达到重试上限，仍存在 blocker/major finding。
+- 安全/隐私适用性不明、存在未批准的残余风险，或缺少独立 Security reviewer。
+- 范围豁免、不可逆动作或生产发布缺少有权批准；此时分别标记 `approval_blocked`、`security_blocked` 或 `release_blocked`。
+
+调查、subagent、实现、验证和回写的重试按 [execution-budgets.md](execution-budgets.md) 执行。同一根因连续两次没有新证据时必须重新规划；重新规划仍失败则拆分或阻塞，不能无界尝试。
 
 事实调查、文件查找、测试命令、现有行为和可复用代码由 Agent 自行完成。询问时说明已确认事实、具体缺口、推荐选择及各选择的影响。
 
@@ -89,6 +100,7 @@ TDD/CODE → VERIFICATION → INDEPENDENT REVIEW
 5. 运行成本合理的基线构建或测试，记录既有失败和环境限制。
 6. 将事实标记为 `verified`、`inferred` 或 `unknown`，附路径、命令或历史证据。
 7. 文档与代码冲突时保留双方陈述和影响，留给 Grill 决策。
+8. 初步识别敏感数据、身份/权限、凭据、网络入口、外部 egress、日志/遥测和生产环境边界；未知项不默认安全。
 
 如果仓库没有 Project Spec 或 Baseline，按当前档位创建最小版本。没有既有记录格式时，可使用 [../assets/exploration-template.md](../assets/exploration-template.md)。不要为了补历史文档阻塞局部改动；只记录本次需求安全推进所需的事实。
 
@@ -112,7 +124,7 @@ TDD/CODE → VERIFICATION → INDEPENDENT REVIEW
 
 ## 6. Epic 与 Issue DAG
 
-Epic 必须包含可观察的 Outcome、Requirement ID、业务流程、范围、影响分析、已确认设计、开放问题和关闭条件。Brownfield Epic 绑定开始时的 Baseline；Greenfield 初始 Epic 绑定首个可运行基线。
+Epic 必须包含可观察的 Outcome、Requirement ID、业务流程、范围、影响分析、已确认设计、开放问题、安全/隐私适用性、审批/发布边界和关闭条件。Brownfield Epic 绑定开始时的 Baseline；Greenfield 初始 Epic 绑定首个可运行基线。
 
 Issue 使用 tracer bullet：一条窄而完整、可演示或可验证的行为路径。优先让 slice 穿过所需层级并保持系统可运行。以下情况可以使用非纵向 Issue：
 
@@ -130,23 +142,31 @@ Issue 使用 tracer bullet：一条窄而完整、可演示或可验证的行为
 
 ### Delta-Spec.md
 
-描述相对 Epic 和当前系统改变的行为、业务规则、异常与非功能要求。每项链接 Epic Requirement，给出独立于实现的验收例子。规格不写文件列表和内部函数方案。
+描述相对 Epic 和当前系统改变的行为、业务规则、异常与非功能要求。每项链接 Epic Requirement，给出独立于实现的验收例子。涉及安全/隐私时写可观察的拒绝、隔离、最小化、保留/删除和故障行为。规格不写文件列表和内部函数方案。
 
 ### Delta-Design.md
 
-记录当前实现事实、复用扫描、方案取舍、interface/seam、数据和状态变化、依赖、迁移/回滚、change budget、测试策略和重构处置。设计只覆盖当前 Issue，不复制 Epic。
+记录当前实现事实、复用扫描、方案取舍、interface/seam、数据和状态变化、依赖、迁移/回滚、change budget、测试策略和重构处置。先判定 Security/Privacy applicability；适用时记录数据分类、信任边界、权限、egress、滥用场景和控制。设计只覆盖当前 Issue，不复制 Epic。
 
 ### Task.md
 
 按照依赖和 TDD slice 排列动作。每个行为 slice 包含 Test ID、red 预期、最小 green 目标和验证命令。新证据可以调整后续任务；已完成证据不改写。
 
+### Review Manifest
+
+按 [fixed-point.md](fixed-point.md) 保存 Issue 开始时的工作区、必要 before-content 及审查前的完整文件清单。未跟踪文件和开始前已脏又被修改的文件必须有独立 diff/内容入口。
+
 ### TDD、Code 与 Verification
 
-读取 [tdd-quality.md](tdd-quality.md) 和 [engineering-health.md](engineering-health.md)。逐 slice 执行测试先行和最小实现，更新 Task 实际状态。完成后生成 Verification，记录需求追踪、命令、结果、测试深度、项目适配和遗留风险。
+读取 [tdd-quality.md](tdd-quality.md) 和 [engineering-health.md](engineering-health.md)。逐 slice 执行测试先行和最小实现，更新 Task 实际状态。完成后生成 Verification，记录需求追踪、命令、结果、测试深度、项目适配、注释质量和遗留风险。命中安全/隐私触发器时还要读取 [security-privacy.md](security-privacy.md)，执行风险匹配的负向测试与项目已有扫描。
 
 ### Independent Review
 
-读取 [review-loop.md](review-loop.md)，使用 [prompts](prompts/) 下的模板派发独立审查。审查通过后才能生成最终 Closure。
+读取 [review-loop.md](review-loop.md)，使用 [prompts](prompts/) 下的模板派发独立审查。Security/Privacy applicability 为 `applicable` 时另派未参与实现的安全 reviewer；普通 Spec/Quality PASS 不能替代。审查通过后才能生成最终 Closure。
+
+### Approval 与 Release
+
+读取 [approvals-release.md](approvals-release.md)。主 Agent 根据触发器核对 Approval ID、批准范围、源码修订、条件和有效期。Agent 不得自批范围豁免、残余风险或生产发布。没有生产授权时可以完成代码交付和发布准备，但不能执行生产 mutation，也不能声称已发布。
 
 ### Closure 与 Writeback
 
@@ -157,13 +177,13 @@ Closure 汇总最终结果、规格/设计偏差、验证、review 迭代、债�
 主 Agent 始终持有低分辨率全局图：Project 摘要、Baseline revision、Epic 当前状态和 Issue DAG。执行者只接收当前 Issue 的 Context Pack：
 
 - Issue/Delta/Task 路径和目标 ID。
-- 相关 Project/Epic 约束及来源。
+- 相关 Project/Epic 约束、安全/隐私适用性、Approval 边界及来源。
 - 相关代码、测试、interface 和前序 Closure。
 - fixed point、允许写入范围、验证命令和停止条件。
 
 subagent 适合独立事实调查、一个 Issue 的实现、有固定输入的验证和独立审查。用户决策型 Grill 留在主 Agent 与用户之间。subagent 缺少信息时返回具体缺口，不自行扩大范围；主 Agent 补充后决定继续、拆 Issue 或询问用户。
 
-如果应用没有 subagent，主 Agent 串行完成各阶段，在实现结束后切换到全新审查上下文或重新读取 fixed-point diff，以维持作者/审查者视角分离。不能因没有 subagent 停在规划阶段。有 subagent 能力时，Issue 审查必须交给未参与实现的 subagent。
+如果应用没有 subagent，主 Agent 可以串行完成 Explore、SDD、TDD、Code 和 Verification，但自审只能标记为 advisory，不能满足 Independent Review Gate。Issue 保持 `review_blocked`，保存 Verification 与 Review Manifest，并明确告知用户需要一个独立 reviewer。只要有 subagent 能力，Issue 审查必须交给未参与实现的 subagent。
 
 ## 9. 自动连续推进
 
@@ -179,6 +199,6 @@ Issue 完成后：
 
 ## 10. 整体完成条件
 
-Issue 完成：退出条件满足，Delta 与实际一致，Verification 通过，独立审查通过，Closure 和回写完成，债务已有明确处置。
+Issue 完成：退出条件满足，Delta 与实际一致，Verification 通过，独立审查通过，Security/Privacy Gate 和 Approval Gate 按适用性通过，Closure 和回写完成，债务已有明确处置。若退出条件包含生产发布，还必须有本次环境、修订和动作的明确 Release Approval；否则保持 `release_blocked`。
 
-Epic 完成：所有 Requirement 满足或有明确豁免，Issue DAG 无隐藏遗留项，集成/发布门禁通过，跨 Issue 重复与架构漂移已检查，Project/Baseline 对账完成。
+Epic 完成：所有 Requirement 满足或有有效 Approval ID 支持的豁免，Issue DAG 无隐藏遗留项，集成、安全/隐私和发布门禁通过，跨 Issue 重复与架构漂移已检查，Project/Baseline 对账完成。能力验收、代码可发布、发布获批和实际已发布必须分别记录。
